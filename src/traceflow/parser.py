@@ -1,3 +1,5 @@
+import os
+import sys
 from datetime import datetime
 
 
@@ -13,10 +15,18 @@ def parse_line(line):
 
 
 def read_log(path):
-    """Lê um ficheiro de log e devolve uma lista de eventos."""
+    """Lê um ficheiro de log, ignora linhas inválidas e marca a origem de cada evento."""
+    source = os.path.basename(path)
     events = []
     with open(path) as ficheiro:
-        for line in ficheiro:
-            if line.strip():
-                events.append(parse_line(line))
+        for number, line in enumerate(ficheiro, start=1):
+            if not line.strip():
+                continue
+            try:
+                event = parse_line(line)
+            except (IndexError, ValueError):
+                print(f"Linha {number} ignorada em {source}: {line.strip()}", file=sys.stderr)
+                continue
+            event["source"] = source
+            events.append(event)
     return events
